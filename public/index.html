@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bun Showcase — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0c0e;
+      --surface: #161619;
+      --surface-raised: #1e1e22;
+      --border: #2a2a30;
+      --text: #e8e6e3;
+      --text-dim: #8a8a8e;
+      --accent: #f9a825;
+      --accent-glow: rgba(249, 168, 37, 0.15);
+      --green: #4caf50;
+      --red: #ef5350;
+      --blue: #42a5f5;
+      --purple: #ab47bc;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Instrument Sans', system-ui, sans-serif;
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grain overlay ────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── Header ──────────────────────── */
+    header {
+      padding: 40px 48px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .logo h1 {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo h1 span { color: var(--accent); }
+
+    #health-badge {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(76, 175, 80, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(76, 175, 80, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #health-badge::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Main Grid ───────────────────── */
+    main {
+      padding: 32px 48px 64px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1200px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover { border-color: rgba(249, 168, 37, 0.3); }
+
+    .card-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title .icon {
+      font-size: 14px;
+    }
+
+    .card.full { grid-column: 1 / -1; }
+
+    /* ── Notes Section ───────────────── */
+    .notes-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    input, textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    input { flex: 1; }
+
+    button {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-sm {
+      font-size: 11px;
+      padding: 4px 10px;
+      background: var(--surface-raised);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-sm:hover {
+      color: var(--red);
+      border-color: var(--red);
+    }
+
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .note-item {
+      background: var(--surface-raised);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .note-item h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .note-item p {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin: 4px 4px 0 0;
+    }
+
+    /* ── Password Hasher ─────────────── */
+    .hash-output {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 12px;
+      word-break: break-all;
+      line-height: 1.6;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .hash-output .label {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .hash-output .timing {
+      color: var(--green);
+    }
+
+    /* ── Worker Section ──────────────── */
+    .worker-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .worker-result {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      white-space: pre-wrap;
+      color: var(--text-dim);
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    /* ── WebSocket ────────────────────── */
+    .ws-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .ws-log {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      max-height: 160px;
+      overflow-y: auto;
+      line-height: 1.8;
+    }
+
+    .ws-log .sys { color: var(--blue); }
+    .ws-log .sent { color: var(--accent); }
+    .ws-log .recv { color: var(--green); }
+    .ws-log .err { color: var(--red); }
+
+    /* ── Stats Row ────────────────────── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      grid-column: 1 / -1;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* ── Scrollbar ────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+    @media (max-width: 768px) {
+      main { grid-template-columns: 1fr; padding: 16px; }
+      header { padding: 20px 16px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🥖</div>
+      <h1><span>bun</span>showcase</h1>
+    </div>
+    <div id="health-badge">loading...</div>
+  </header>
+
+  <main>
+    <!-- Stats Row -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="stat-runtime">—</div>
+        <div class="stat-label">Runtime</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-notes">—</div>
+        <div class="stat-label">Notes in SQLite</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-memory">—</div>
+        <div class="stat-label">Heap Used</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-uptime">—</div>
+        <div class="stat-label">Uptime</div>
+      </div>
+    </div>
+
+    <!-- Notes (SQLite) -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📦</span> bun:sqlite — Notes CRUD</div>
+      <div class="notes-form" style="flex-direction:column">
+        <div style="display:flex;gap:10px">
+          <input type="text" id="note-title" placeholder="Note title..." />
+          <button class="btn-primary" onclick="createNote()">Add</button>
+        </div>
+        <textarea id="note-content" placeholder="Content (optional)..." rows="2" style="width:100%;resize:vertical"></textarea>
+        <input type="text" id="note-tags" placeholder="Tags — comma separated (optional)" />
+      </div>
+      <div class="notes-list" id="notes-list">Loading...</div>
+    </div>
+
+    <!-- Password Hasher -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔐</span> Bun.password — Hashing</div>
+      <div class="notes-form">
+        <input type="text" id="pw-input" placeholder="Enter a password..." />
+        <button class="btn-primary" onclick="hashPw()">Hash</button>
+      </div>
+      <div class="hash-output" id="hash-output">
+        Enter a password above to see Argon2id hashing in action.
+        <br/>No npm packages needed — it's built into Bun!
+      </div>
+    </div>
+
+    <!-- Worker -->
+    <div class="card">
+      <div class="card-title"><span class="icon">⚙️</span> Bun.Worker — CPU Offloading</div>
+      <div class="worker-controls">
+        <button class="btn-primary" onclick="runWorker('fibonacci', 1000)">Fibonacci(1000)</button>
+        <button class="btn-primary" onclick="runWorker('primes', 100000)">Primes to 100k</button>
+        <button class="btn-primary" onclick="runWorker('pi', 1000000)">Estimate π (1M)</button>
+      </div>
+      <div class="worker-result" id="worker-result">Click a button to offload CPU work to a Bun Worker thread.</div>
+    </div>
+
+    <!-- WebSocket -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔌</span> WebSocket — Built-in</div>
+      <div class="ws-controls">
+        <input type="text" id="ws-msg" placeholder="Type a message..." style="flex:1" />
+        <button class="btn-primary" onclick="sendWs()">Send</button>
+        <button class="btn-sm" onclick="connectWs()">Reconnect</button>
+      </div>
+      <div class="ws-log" id="ws-log"></div>
+    </div>
+  </main>
+
+  <script>
+    const API = '';
+
+    // ── Health / Stats ──────────────────
+    async function fetchHealth() {
+      try {
+        const res = await fetch(`${API}/api/health`);
+        const data = await res.json();
+        document.getElementById('health-badge').textContent = `${data.runtime} · ${data.status}`;
+        document.getElementById('stat-runtime').textContent = data.runtime.replace('Bun ', 'v');
+        document.getElementById('stat-memory').textContent = data.memory.heapUsed;
+        document.getElementById('stat-uptime').textContent = data.uptime;
+      } catch {
+        document.getElementById('health-badge').textContent = 'offline';
+        document.getElementById('health-badge').style.color = '#ef5350';
+      }
+    }
+
+    // ── Notes ────────────────────────────
+    async function fetchNotes() {
+      const res = await fetch(`${API}/api/notes`);
+      const data = await res.json();
+      document.getElementById('stat-notes').textContent = data.total;
+      const list = document.getElementById('notes-list');
+      if (data.notes.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-dim);font-size:13px">No notes yet. Create one above!</p>';
+        return;
+      }
+      list.innerHTML = data.notes.map(n => {
+        const tags = JSON.parse(n.tags || '[]').map(t => `<span class="tag">${t}</span>`).join('');
+        return `<div class="note-item">
+          <div>
+            <h3>${esc(n.title)}</h3>
+            <p>${esc(n.content || '(no content)')}</p>
+            ${tags ? '<div>' + tags + '</div>' : ''}
+          </div>
+          <button class="btn-sm" onclick="deleteNote(${n.id})">✕</button>
+        </div>`;
+      }).join('');
+    }
+
+    async function createNote() {
+      const title = document.getElementById('note-title').value.trim();
+      if (!title) return;
+      const content = document.getElementById('note-content').value.trim();
+      const tagsRaw = document.getElementById('note-tags').value.trim();
+      const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+      await fetch(`${API}/api/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content, tags }),
+      });
+      document.getElementById('note-title').value = '';
+      document.getElementById('note-content').value = '';
+      document.getElementById('note-tags').value = '';
+      fetchNotes();
+    }
+
+    async function deleteNote(id) {
+      await fetch(`${API}/api/notes/${id}`, { method: 'DELETE' });
+      fetchNotes();
+    }
+
+    document.getElementById('note-title').addEventListener('keydown', e => {
+      if (e.key === 'Enter') createNote();
+    });
+
+    // ── Password Hasher ──────────────────
+    async function hashPw() {
+      const pw = document.getElementById('pw-input').value;
+      if (!pw) return;
+      const el = document.getElementById('hash-output');
+      el.innerHTML = 'Hashing with Argon2id...';
+      const res = await fetch(`${API}/api/auth/hash`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      const data = await res.json();
+      el.innerHTML = `<span class="label">Algorithm:</span> ${data.algorithm}\n<span class="label">Hash:</span> ${data.hash}\n<span class="label">Time:</span> <span class="timing">${data.timeMs}ms</span>`;
+    }
+
+    document.getElementById('pw-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') hashPw();
+    });
+
+    // ── Worker ───────────────────────────
+    async function runWorker(task, payload) {
+      const el = document.getElementById('worker-result');
+      el.textContent = `Running ${task}(${payload.toLocaleString()}) in a Worker thread...`;
+      const res = await fetch(`${API}/api/workers/compute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task, payload }),
+      });
+      const data = await res.json();
+      el.textContent = JSON.stringify(data, null, 2);
+    }
+
+    // ── WebSocket ────────────────────────
+    let ws = null;
+
+    function wsLog(cls, msg) {
+      const el = document.getElementById('ws-log');
+      el.innerHTML += `<div class="${cls}">${new Date().toLocaleTimeString()} · ${esc(msg)}</div>`;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function connectWs() {
+      if (ws) ws.close();
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${location.host}/ws`);
+      ws.onopen = () => wsLog('sys', 'Connected to WebSocket server');
+      ws.onmessage = e => {
+        const data = JSON.parse(e.data);
+        if (data.type === 'welcome') wsLog('sys', data.message);
+        else if (data.type === 'echo') wsLog('recv', `Echo: ${data.message}`);
+        else wsLog('recv', `Broadcast: ${data.message}`);
+      };
+      ws.onclose = () => wsLog('err', 'Disconnected');
+      ws.onerror = () => wsLog('err', 'Connection error');
+    }
+
+    function sendWs() {
+      const input = document.getElementById('ws-msg');
+      const msg = input.value.trim();
+      if (!msg || !ws || ws.readyState !== 1) return;
+      ws.send(msg);
+      wsLog('sent', `Sent: ${msg}`);
+      input.value = '';
+    }
+
+    document.getElementById('ws-msg').addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendWs();
+    });
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ── Init ─────────────────────────────
+    fetchHealth();
+    fetchNotes();
+    connectWs();
+    setInterval(fetchHealth, 5000);
+  </script>
+</body>
+</html>
