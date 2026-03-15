@@ -40,6 +40,29 @@ export function getDb(): Database {
       END
     `);
 
+    _db.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        email         TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+
+    _db.run(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token      TEXT NOT NULL UNIQUE,
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+
+    _db.run("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)");
+    _db.run("CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)");
+    _db.run("CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at)");
+
     logger.success(`SQLite database opened: ${config.DB_PATH}`);
   }
   return _db;

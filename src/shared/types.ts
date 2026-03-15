@@ -20,6 +20,8 @@ export interface CreateNoteInput {
 export interface WebSocketData {
   id: string;
   connectedAt: number;
+  userId?: number;
+  email?: string;
 }
 
 export type WsMessageType = "welcome" | "echo" | "broadcast";
@@ -50,6 +52,45 @@ export interface WorkerResponse {
   timeMs: number;
   thread: string;
   error?: string;
+}
+
+// ── Auth ────────────────────────────────────────────────────────────
+
+export interface User {
+  id: number;
+  email: string;
+  password_hash: string;
+  created_at: string;
+}
+
+export interface UserPublic {
+  id: number;
+  email: string;
+  created_at: string;
+}
+
+export interface Session {
+  id: number;
+  user_id: number;
+  token: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface RegisterInput {
+  email: string;
+  password: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  expiresAt: string;
+  user: UserPublic;
 }
 
 // ── API ─────────────────────────────────────────────────────────────
