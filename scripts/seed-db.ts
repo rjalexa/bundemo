@@ -3,7 +3,7 @@
  * Demonstrates bun:sqlite batch transactions and Bun.nanoseconds() timing.
  */
 
-import { NotesDB } from "../src/server/db";
+import { NotesRepo } from "../src/server/db/notes.repo";
 import { logger } from "../src/utils/logger";
 
 const sampleNotes = [
@@ -54,14 +54,14 @@ const sampleNotes = [
 logger.banner("Database Seeder");
 
 const start = Bun.nanoseconds();
-const notes = NotesDB.batchCreate(sampleNotes);
+const notes = NotesRepo.batchCreate(sampleNotes);
 const elapsed = (Bun.nanoseconds() - start) / 1_000_000;
 
 logger.table("Seed Results", {
   "Notes Created": notes.length,
   "Time": `${elapsed.toFixed(2)}ms`,
   "Avg per Note": `${(elapsed / notes.length).toFixed(2)}ms`,
-  "Total in DB": NotesDB.count(),
+  "Total in DB": NotesRepo.count(),
 });
 
 logger.success("Database seeded successfully!");

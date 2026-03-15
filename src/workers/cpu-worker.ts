@@ -9,6 +9,8 @@
  *   - Use structured cloning for fast data transfer
  */
 
+import type { WorkerRequest } from "../shared/types";
+
 declare var self: Worker;
 
 // ── Task Handlers ──────────────────────────────────────────────────
@@ -57,13 +59,7 @@ function estimatePi(iterations: number): { pi: number; iterations: number } {
 
 // ── Message Handler ────────────────────────────────────────────────
 
-interface WorkerMessage {
-  id: string;
-  task: "fibonacci" | "primes" | "pi";
-  payload: number;
-}
-
-self.onmessage = (event: MessageEvent<WorkerMessage>) => {
+self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   const { id, task, payload } = event.data;
   const start = performance.now();
 

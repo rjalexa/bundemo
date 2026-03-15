@@ -5,7 +5,6 @@
 
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { Files } from "../utils/files";
-import { unlinkSync } from "node:fs";
 
 const TEST_DIR = "/tmp/bun-showcase-test";
 const TEST_FILE = `${TEST_DIR}/test.txt`;

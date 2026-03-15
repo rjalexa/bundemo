@@ -1,27 +1,17 @@
-/**
- * 🧪 Database Tests
- * Demonstrates bun test — Bun's built-in Jest-compatible test runner.
- *
- * Features shown:
- *   - describe / it / expect
- *   - beforeAll / afterAll lifecycle hooks
- *   - toEqual, toBe, toBeGreaterThan matchers
- */
-
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { NotesDB, getDb } from "../server/db";
-import type { CreateNoteInput } from "../server/db";
+import { NotesRepo } from "../server/db/notes.repo";
+import { closeDb } from "../server/db/connection";
+import type { CreateNoteInput } from "../shared/types";
 
-// Use an in-memory database for tests
 beforeAll(() => {
   process.env.DB_PATH = ":memory:";
 });
 
 afterAll(() => {
-  NotesDB.close();
+  closeDb();
 });
 
-describe("NotesDB", () => {
+describe("NotesRepo", () => {
   describe("create", () => {
     it("should create a note with required fields", () => {
       const input: CreateNoteInput = {
@@ -30,7 +20,7 @@ describe("NotesDB", () => {
         tags: ["test", "demo"],
       };
 
-      const note = NotesDB.create(input);
+      const note = NotesRepo.create(input);
 
       expect(note.id).toBeGreaterThan(0);
       expect(note.title).toBe("Test Note");
@@ -40,41 +30,41 @@ describe("NotesDB", () => {
     });
 
     it("should auto-increment IDs", () => {
-      const note1 = NotesDB.create({ title: "Note 1", content: "" });
-      const note2 = NotesDB.create({ title: "Note 2", content: "" });
+      const note1 = NotesRepo.create({ title: "Note 1", content: "" });
+      const note2 = NotesRepo.create({ title: "Note 2", content: "" });
 
       expect(note2.id).toBe(note1.id + 1);
     });
 
     it("should default tags to empty array", () => {
-      const note = NotesDB.create({ title: "No Tags", content: "" });
+      const note = NotesRepo.create({ title: "No Tags", content: "" });
       expect(JSON.parse(note.tags)).toEqual([]);
     });
   });
 
   describe("get", () => {
     it("should retrieve a note by ID", () => {
-      const created = NotesDB.create({ title: "Findable", content: "Find me" });
-      const found = NotesDB.get(created.id);
+      const created = NotesRepo.create({ title: "Findable", content: "Find me" });
+      const found = NotesRepo.get(created.id);
 
       expect(found).not.toBeNull();
       expect(found!.title).toBe("Findable");
     });
 
     it("should return null for non-existent ID", () => {
-      const found = NotesDB.get(99999);
+      const found = NotesRepo.get(99999);
       expect(found).toBeNull();
     });
   });
 
   describe("list", () => {
     it("should return all notes", () => {
-      const notes = NotesDB.list();
+      const notes = NotesRepo.list();
       expect(notes.length).toBeGreaterThan(0);
     });
 
     it("should return notes in reverse chronological order", () => {
-      const notes = NotesDB.list();
+      const notes = NotesRepo.list();
       for (let i = 1; i < notes.length; i++) {
         expect(notes[i - 1].created_at >= notes[i].created_at).toBe(true);
       }
@@ -83,8 +73,8 @@ describe("NotesDB", () => {
 
   describe("update", () => {
     it("should update a note's fields", () => {
-      const note = NotesDB.create({ title: "Original", content: "Before" });
-      const updated = NotesDB.update(note.id, {
+      const note = NotesRepo.create({ title: "Original", content: "Before" });
+      const updated = NotesRepo.update(note.id, {
         title: "Updated",
         content: "After",
         tags: ["updated"],
@@ -98,33 +88,33 @@ describe("NotesDB", () => {
 
   describe("delete", () => {
     it("should delete a note", () => {
-      const note = NotesDB.create({ title: "Delete Me", content: "" });
-      NotesDB.delete(note.id);
-      const found = NotesDB.get(note.id);
+      const note = NotesRepo.create({ title: "Delete Me", content: "" });
+      NotesRepo.delete(note.id);
+      const found = NotesRepo.get(note.id);
       expect(found).toBeNull();
     });
   });
 
   describe("count", () => {
     it("should return the total number of notes", () => {
-      const count = NotesDB.count();
+      const count = NotesRepo.count();
       expect(count).toBeGreaterThan(0);
     });
   });
 
   describe("batchCreate", () => {
     it("should insert multiple notes atomically", () => {
-      const countBefore = NotesDB.count();
+      const countBefore = NotesRepo.count();
       const inputs = Array.from({ length: 5 }, (_, i) => ({
         title: `Batch Note ${i}`,
         content: `Batch content ${i}`,
         tags: ["batch"],
       }));
 
-      const results = NotesDB.batchCreate(inputs);
+      const results = NotesRepo.batchCreate(inputs);
 
       expect(results.length).toBe(5);
-      expect(NotesDB.count()).toBe(countBefore + 5);
+      expect(NotesRepo.count()).toBe(countBefore + 5);
     });
   });
 });

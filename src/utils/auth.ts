@@ -7,19 +7,7 @@
  */
 
 import { logger } from "./logger";
-
-// ── Types ──────────────────────────────────────────────────────────
-
-export interface HashResult {
-  hash: string;
-  algorithm: string;
-  timeMs: number;
-}
-
-export interface VerifyResult {
-  match: boolean;
-  timeMs: number;
-}
+import type { HashResult, VerifyResult } from "../shared/types";
 
 // ── Password Hashing ───────────────────────────────────────────────
 

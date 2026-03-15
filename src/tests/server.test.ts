@@ -1,58 +1,47 @@
-/**
- * 🧪 Server Integration Tests
- * Tests the HTTP API endpoints using Bun's native fetch.
- *
- * Demonstrates:
- *   - Testing Bun.serve() with real HTTP requests
- *   - No test HTTP client needed — just use fetch()!
- */
-
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 
 const BASE_URL = "http://localhost:3001";
 let server: ReturnType<typeof Bun.serve>;
 
 beforeAll(async () => {
-  // Import and start server on a test port
   process.env.PORT = "3001";
   process.env.DB_PATH = ":memory:";
 
-  // Dynamically import to pick up env vars
-  const { Router, json, jsonError } = await import("../server/router");
-  const { NotesDB } = await import("../server/db");
+  const { Router } = await import("../server/router");
+  const { NotesRepo } = await import("../server/db/notes.repo");
 
   const router = new Router();
 
-  router.get("/api/health", () => json({ status: "ok" }));
+  router.get("/api/health", () => Response.json({ status: "ok" }));
 
   router.get("/api/notes", () => {
-    const notes = NotesDB.list();
-    return json({ notes, total: notes.length });
+    const notes = NotesRepo.list();
+    return Response.json({ notes, total: notes.length });
   });
 
   router.post("/api/notes", async (req) => {
     const body = await req.json();
-    if (!body.title) return jsonError("Title is required");
-    const note = NotesDB.create({
+    if (!body.title) return Response.json({ error: "Title is required" }, { status: 400 });
+    const note = NotesRepo.create({
       title: body.title,
       content: body.content ?? "",
       tags: body.tags ?? [],
     });
-    return json(note, 201);
+    return Response.json(note, { status: 201 });
   });
 
   router.get("/api/notes/:id", (_req, params) => {
-    const note = NotesDB.get(Number(params.id));
-    if (!note) return jsonError("Note not found", 404);
-    return json(note);
+    const note = NotesRepo.get(Number(params.id));
+    if (!note) return Response.json({ error: "Note not found" }, { status: 404 });
+    return Response.json(note);
   });
 
   router.delete("/api/notes/:id", (_req, params) => {
     const id = Number(params.id);
-    const note = NotesDB.get(id);
-    if (!note) return jsonError("Note not found", 404);
-    NotesDB.delete(id);
-    return json({ deleted: true, id });
+    const note = NotesRepo.get(id);
+    if (!note) return Response.json({ error: "Note not found" }, { status: 404 });
+    NotesRepo.delete(id);
+    return Response.json({ deleted: true, id });
   });
 
   server = Bun.serve({
@@ -118,7 +107,6 @@ describe("HTTP API", () => {
 
   describe("GET /api/notes/:id", () => {
     it("should return a specific note", async () => {
-      // Create one first
       const createRes = await fetch(`${BASE_URL}/api/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -156,7 +144,6 @@ describe("HTTP API", () => {
       expect(res.status).toBe(200);
       expect(data.deleted).toBe(true);
 
-      // Verify it's gone
       const getRes = await fetch(`${BASE_URL}/api/notes/${created.id}`);
       expect(getRes.status).toBe(404);
     });
